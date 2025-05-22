@@ -15,13 +15,16 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-
 SECRET_KEY = 'django-insecure-your-secret-key-here'
 
-DEBUG = FalseALLOWED_HOSTS = ['your-username.pythonanywhere.com']# Configure static root for productionSTATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Static files configuration
+STATIC_URL = '/static/'
+STATIC_ROOT = str(BASE_DIR / 'staticfiles')
+STATICFILES_DIRS = [str(BASE_DIR / 'static')]
 
-
+# Security settings
+DEBUG = False
+ALLOWED_HOSTS = ['vimalvijaykumar.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -89,12 +92,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
