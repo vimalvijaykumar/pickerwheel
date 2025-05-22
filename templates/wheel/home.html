@@ -1,0 +1,46 @@
+{% extends 'wheel/base.html' %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-4 mb-4">Welcome to Picker Wheel</h1>
+    <p class="lead mb-4">Make random decisions with our interactive spinning wheel!</p>
+    
+    {% if user.is_authenticated %}
+    <div class="mb-4">
+        <a href="{% url 'create_wheel' %}" class="btn btn-primary btn-lg">Create New Wheel</a>
+    </div>
+    {% else %}
+    <div class="mb-4">
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">Sign Up</a>
+        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+    </div>
+    {% endif %}
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Easy to Use</h5>
+                    <p class="card-text">Create your wheel in seconds and start making random decisions!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-title">
+                    <h5 class="card-title">Customizable</h5>
+                    <p class="card-text">Add your own items, customize colors, and set weights for each option.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Save & Share</h5>
+                    <p class="card-text">Save your wheels and share them with others!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

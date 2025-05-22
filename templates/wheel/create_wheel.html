@@ -1,0 +1,257 @@
+{% extends 'wheel/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="wheel-container text-center">
+                <canvas id="wheelCanvas" class="wheel-canvas"></canvas>
+                <button id="spinButton" class="btn btn-dark btn-lg mt-3">SPIN</button>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{% url 'show_data' %}" class="btn btn-primary">
+                    <i class="fas fa-chart-bar"></i> Show Statistics
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="card-title mb-0">INPUTS <span class="badge bg-secondary" id="itemCount">0</span></h3>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary btn-sm" id="toggleView">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" id="shuffleItems">
+                                <i class="fas fa-random"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" id="moreOptions">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="newItem" placeholder="Input text here...">
+                        <button class="btn btn-primary" id="addItem">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" id="addImage">
+                            <i class="fas fa-image"></i>
+                        </button>
+                    </div>
+
+                    <div id="itemsList" class="list-group">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+const wheelCanvas = document.getElementById('wheelCanvas');
+const ctx = wheelCanvas.getContext('2d');
+const spinButton = document.getElementById('spinButton');
+const newItemInput = document.getElementById('newItem');
+const addItemButton = document.getElementById('addItem');
+const itemsList = document.getElementById('itemsList');
+const itemCountBadge = document.getElementById('itemCount');
+
+let wheelData = JSON.parse(localStorage.getItem('wheelData')) || {
+    items: [],
+    spins: 0,
+    history: [],
+    lastUpdated: '-'
+};
+
+let items = wheelData.items.map(item => item.text) || [];
+let isSpinning = false;
+let currentRotation = 0;
+
+wheelCanvas.width = 500;
+wheelCanvas.height = 500;
+
+const colors = [
+    '#FFB800', 
+    '#FFF176', 
+    '#558B2F', 
+    '#9CCC65', 
+];
+
+function updateItemCount() {
+    itemCountBadge.textContent = items.length;
+}
+
+function createItemElement(text) {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'list-group-item d-flex justify-content-between align-items-center';
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+    
+    const buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'btn-group';
+    
+    const moveButton = document.createElement('button');
+    moveButton.className = 'btn btn-sm btn-outline-secondary';
+    moveButton.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+    
+    const editButton = document.createElement('button');
+    editButton.className = 'btn btn-sm btn-outline-secondary';
+    editButton.innerHTML = '<i class="fas fa-check"></i>';
+    
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-sm btn-outline-danger';
+    deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+    
+    deleteButton.addEventListener('click', () => {
+        itemDiv.remove();
+        items = items.filter(item => item !== text);
+        wheelData.items = wheelData.items.filter(item => item.text !== text);
+        updateItemCount();
+        saveWheelData();
+        drawWheel();
+    });
+    
+    buttonsDiv.appendChild(moveButton);
+    buttonsDiv.appendChild(editButton);
+    buttonsDiv.appendChild(deleteButton);
+    
+    itemDiv.appendChild(textSpan);
+    itemDiv.appendChild(buttonsDiv);
+    
+    return itemDiv;
+}
+
+function addItem() {
+    const text = newItemInput.value.trim();
+    if (text) {
+        items.push(text);
+        wheelData.items.push({
+            text: text,
+            color: colors[items.length % colors.length],
+            timesSelected: 0,
+            lastSelected: '-'
+        });
+        itemsList.appendChild(createItemElement(text));
+        newItemInput.value = '';
+        updateItemCount();
+        saveWheelData();
+        drawWheel();
+    }
+}
+
+function drawWheel() {
+    ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+    
+    if (items.length === 0) return;
+    
+    const centerX = wheelCanvas.width / 2;
+    const centerY = wheelCanvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10;
+    
+    const anglePerItem = (2 * Math.PI) / items.length;
+    
+    items.forEach((item, index) => {
+        const startAngle = index * anglePerItem + currentRotation;
+        const endAngle = startAngle + anglePerItem;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + anglePerItem / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#000000';
+        ctx.font = '16px Arial';
+        ctx.fillText(item, radius - 20, 0);
+        ctx.restore();
+    });
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.stroke();
+}
+
+function saveWheelData() {
+    wheelData.lastUpdated = new Date().toLocaleString();
+    localStorage.setItem('wheelData', JSON.stringify(wheelData));
+}
+
+function spin() {
+    if (isSpinning || items.length < 2) return;
+    
+    isSpinning = true;
+    spinButton.disabled = true;
+    
+    const spins = 3 + Math.random() * 2;
+    const targetRotation = currentRotation + (Math.PI * 2 * spins);
+    const duration = 3000;
+    const startTime = performance.now();
+    
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easeOut = t => 1 - Math.pow(1 - t, 3);
+        
+        currentRotation = currentRotation + (targetRotation - currentRotation) * easeOut(progress);
+        drawWheel();
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            isSpinning = false;
+            spinButton.disabled = false;
+            
+            const normalizedRotation = (currentRotation % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            const itemIndex = Math.floor(items.length * (1 - normalizedRotation / (Math.PI * 2))) % items.length;
+            const selectedItem = items[itemIndex];
+            
+            wheelData.spins++;
+            const itemData = wheelData.items.find(item => item.text === selectedItem);
+            if (itemData) {
+                itemData.timesSelected = (itemData.timesSelected || 0) + 1;
+                itemData.lastSelected = new Date().toLocaleString();
+            }
+            
+            wheelData.history.push({
+                item: selectedItem,
+                timestamp: new Date().toLocaleString()
+            });
+            
+            saveWheelData();
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+addItemButton.addEventListener('click', addItem);
+newItemInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addItem();
+});
+spinButton.addEventListener('click', spin);
+
+updateItemCount();
+wheelData.items.forEach(item => {
+    itemsList.appendChild(createItemElement(item.text));
+});
+drawWheel();
+</script>
+{% endblock %}
+{% endblock %} 

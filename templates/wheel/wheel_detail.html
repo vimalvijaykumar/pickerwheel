@@ -1,0 +1,134 @@
+{% extends 'wheel/base.html' %}
+
+{% block content %}
+<div class="wheel-container">
+    <h2 class="text-center mb-4">{{ wheel.name }}</h2>
+    <p class="text-center text-muted">Last updated: {{ wheel.updated_at|date:"F j, Y, g:i a" }}</p>
+    
+    <div class="text-center mb-4">
+        <canvas id="wheelCanvas" class="wheel-canvas"></canvas>
+    </div>
+    
+    <div class="text-center mb-4">
+        <button id="spinButton" class="btn btn-primary btn-lg">SPIN</button>
+    </div>
+    
+    <div id="result" class="alert alert-success text-center" style="display: none;">
+        <h3 class="mb-0">Result: <span id="resultText"></span></h3>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const items = {{ items|safe }};
+const spinButton = document.getElementById('spinButton');
+const resultDiv = document.getElementById('result');
+const resultText = document.getElementById('resultText');
+
+canvas.width = 500;
+canvas.height = 500;
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = Math.min(centerX, centerY) - 10;
+let currentRotation = 0;
+let isSpinning = false;
+
+function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let startAngle = currentRotation;
+    const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+    
+    items.forEach(item => {
+        const angle = (2 * Math.PI * item.weight) / totalWeight;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + angle);
+        ctx.closePath();
+        
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + angle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#000000';
+        ctx.font = '16px Arial';
+        ctx.fillText(item.text, radius - 10, 0);
+        ctx.restore();
+        
+        startAngle += angle;
+    });
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    ctx.stroke();
+}
+
+function spin() {
+    if (isSpinning) return;
+    
+    isSpinning = true;
+    spinButton.disabled = true;
+    resultDiv.style.display = 'none';
+    
+    const spins = 3 + Math.random() * 2;
+    const targetRotation = currentRotation + (Math.PI * 2 * spins);
+    const duration = 3000; 
+    const startTime = performance.now();
+    
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easeOut = t => 1 - Math.pow(1 - t, 3);
+        
+        currentRotation = currentRotation + (targetRotation - currentRotation) * easeOut(progress);
+        drawWheel();
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            isSpinning = false;
+            spinButton.disabled = false;
+            
+            const normalizedRotation = currentRotation % (Math.PI * 2);
+            const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            let accumWeight = 0;
+            
+            for (const item of items) {
+                accumWeight += item.weight;
+                const angle = (2 * Math.PI * accumWeight) / totalWeight;
+                if (normalizedRotation <= angle) {
+                    resultText.textContent = item.text;
+                    resultDiv.style.display = 'block';
+                    break;
+                }
+            }
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+drawWheel();
+
+spinButton.addEventListener('click', spin);
+
+window.addEventListener('resize', () => {
+    const container = canvas.parentElement;
+    const size = Math.min(container.clientWidth, 500);
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+});
+</script>
+{% endblock %} 

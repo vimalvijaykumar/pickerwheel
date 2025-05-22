@@ -1,0 +1,99 @@
+/* Custom CSS Variables */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --border-color: #dee2e6;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --primary-color: #0d6efd;
+    --secondary-color: #495057;
+    --success-color: #198754;
+    --background-color: #212529;
+    --text-color: #ffffff;
+    --border-color: #495057;
+}
+
+/* Global Styles */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Wheel Container */
+.wheel-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Wheel Canvas */
+.wheel-canvas {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    display: block;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Styles */
+.form-control {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.form-control:focus {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Card Styles */
+.card {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+}
+
+/* Alert Styles */
+.alert {
+    background-color: var(--success-color);
+    color: #ffffff;
+    border: none;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: var(--primary-color) !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .wheel-container {
+        margin: 1rem;
+        padding: 0.5rem;
+    }
+    
+    .wheel-canvas {
+        max-width: 100%;
+    }
+} 

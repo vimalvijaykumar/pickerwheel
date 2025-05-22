@@ -1,0 +1,115 @@
+{% extends 'wheel/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Wheel Statistics</h3>
+            <a href="{% url 'create_wheel' %}" class="btn btn-light">Back to Wheel</a>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-body text-center">
+                            <h4 class="card-title">Total Items</h4>
+                            <h2 class="display-4" id="totalItems">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-body text-center">
+                            <h4 class="card-title">Total Spins</h4>
+                            <h2 class="display-4" id="totalSpins">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-body text-center">
+                            <h4 class="card-title">Last Updated</h4>
+                            <p class="lead" id="lastUpdated">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Item List</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item Name</th>
+                            <th>Times Selected</th>
+                            <th>Color</th>
+                            <th>Last Selected</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Spin History</h3>
+        </div>
+        <div class="card-body">
+            <ul class="list-group" id="spinHistory">
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+const wheelData = JSON.parse(localStorage.getItem('wheelData')) || {
+    items: [],
+    spins: 0,
+    history: [],
+    lastUpdated: '-'
+};
+
+document.getElementById('totalItems').textContent = wheelData.items.length;
+document.getElementById('totalSpins').textContent = wheelData.spins;
+document.getElementById('lastUpdated').textContent = wheelData.lastUpdated;
+
+const itemsTable = document.getElementById('itemsTable');
+wheelData.items.forEach((item, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${item.text}</td>
+        <td>${item.timesSelected || 0}</td>
+        <td><span class="badge" style="background-color: ${item.color}">&nbsp;</span></td>
+        <td>${item.lastSelected || '-'}</td>
+    `;
+    itemsTable.appendChild(row);
+});
+
+const spinHistory = document.getElementById('spinHistory');
+wheelData.history.slice().reverse().forEach(record => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item';
+    li.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <span><strong>${record.item}</strong> was selected</span>
+            <span class="text-muted">${record.timestamp}</span>
+        </div>
+    `;
+    spinHistory.appendChild(li);
+});
+</script>
+{% endblock %}
+{% endblock %} 
