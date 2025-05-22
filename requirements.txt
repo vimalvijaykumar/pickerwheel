@@ -1,5 +1,5 @@
-Django
-python-dotenv
-django-crispy-forms
-crispy-bootstrap4
-Pillow
+Django==4.2.0
+python-dotenv==1.0.0
+django-crispy-forms==2.0
+crispy-bootstrap4==2022.1
+Pillow==9.5.0
